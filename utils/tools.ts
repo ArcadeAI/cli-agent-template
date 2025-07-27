@@ -14,6 +14,10 @@ export async function prepareTools(
   const client = new Arcade({ apiKey: config.arcade_api_key });
   const toolkit = await client.tools.list({ toolkit: toolkitName, limit });
 
+  if (toolkit.items.length === 0) {
+    throw new Error(`No tools found for toolkit: ${toolkitName}`);
+  }
+
   const executeOrAuthorizeZodToolWithLogging = (tool: any) => {
     return async (input: any) => {
       const toolName = tool.toolDefinition.qualified_name as string;
