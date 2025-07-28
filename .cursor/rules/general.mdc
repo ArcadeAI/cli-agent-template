@@ -1,7 +1,42 @@
----
-alwaysApply: true
----
+# General Development Rules
 
-We use Bun and not Node.js.
+## Runtime Environment
 
-After modifying files, run `bun format` to format the files
+- We use **Bun** and not Node.js for this project
+- All package management should use `bun` commands (`bun install`, `bun add`, etc.)
+- Use `bun run` to execute scripts defined in package.json
+
+## Code Formatting & Quality
+
+- After modifying files, always run `bun format` to format the code
+- Follow TypeScript best practices with strict typing
+- Use meaningful variable and function names
+- Add JSDoc comments for public functions and classes
+- Keep functions small and focused on a single responsibility
+
+## File Organization
+
+- Place new files in appropriate directories based on their purpose
+- Use consistent file naming conventions (camelCase for files, PascalCase for classes)
+- Group related functionality together
+
+## Testing
+
+- Write tests for new functionality
+- Use descriptive test names that explain the expected behavior
+- Run tests with `bun test` before committing changes
+- Aim for good test coverage, especially for critical business logic
+
+## Git & Version Control
+
+- Write clear, descriptive commit messages
+- Use conventional commit format when possible (feat:, fix:, docs:, etc.)
+- Keep commits focused and atomic
+- Test changes locally before pushing
+
+## Performance & Best Practices
+
+- Avoid unnecessary dependencies
+- Use async/await for asynchronous operations
+- Handle errors gracefully with proper error messages
+- Consider performance implications when writing code
