@@ -5,18 +5,19 @@ describe("CLI Commands", () => {
   // Helper function to run CLI commands using Bun's $ executor
   const runCommand = async (args: string[]) => {
     try {
-      const { stdout, stderr, exitCode } = await $`bun agent.ts ${args}`;
+      const { stdout, stderr, exitCode } =
+        await $`bun agent.ts ${args}`.quiet();
       return {
         stdout: stdout.toString(),
         stderr: stderr.toString(),
-        exitCode
+        exitCode,
       };
     } catch (error: any) {
       // Handle ShellError when command fails
       return {
         stdout: error.stdout?.toString() || "",
         stderr: error.stderr?.toString() || "",
-        exitCode: error.exitCode || 1
+        exitCode: error.exitCode || 1,
       };
     }
   };
@@ -65,7 +66,9 @@ describe("CLI Commands", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("inbox");
-      expect(result.stdout).toContain("Read your inbox and summarize the emails");
+      expect(result.stdout).toContain(
+        "Read your inbox and summarize the emails",
+      );
       expect(result.stderr).toBe("");
     });
 
@@ -74,7 +77,9 @@ describe("CLI Commands", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("chat");
-      expect(result.stdout).toContain("Start an interactive chat session with the agent");
+      expect(result.stdout).toContain(
+        "Start an interactive chat session with the agent",
+      );
       expect(result.stderr).toBe("");
     });
 
@@ -83,7 +88,9 @@ describe("CLI Commands", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("slack-summary");
-      expect(result.stdout).toContain("Read your inbox and summarize the emails");
+      expect(result.stdout).toContain(
+        "Read your inbox and summarize the emails",
+      );
       expect(result.stderr).toBe("");
     });
   });
