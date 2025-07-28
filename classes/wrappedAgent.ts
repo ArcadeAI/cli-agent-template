@@ -1,6 +1,7 @@
 import {
   Agent,
   type AgentInputItem,
+  Handoff,
   Runner,
   type Tool,
   user,
@@ -32,7 +33,7 @@ export abstract class WrappedAgent {
     this.logger = logger;
   }
 
-  public async run(prompt: string, toolkitNames: string[] = [], maxTurns = 10) {
+  public async run(prompt: string, toolkitNames: string[] = [], handoffs: Handoff[] = [], maxTurns = 10) {
     const tools: Tool[] = [];
 
     for (const toolkitName of toolkitNames) {
@@ -50,6 +51,7 @@ export abstract class WrappedAgent {
         model: this.config.openai_model,
         instructions: this.instructions,
         tools,
+        handoffs,
       });
     } else {
       this.agent.tools = tools;
