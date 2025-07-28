@@ -33,7 +33,12 @@ export abstract class WrappedAgent {
     this.logger = logger;
   }
 
-  public async run(prompt: string, toolkitNames: string[] = [], handoffs: Handoff[] = [], maxTurns = 10) {
+  public async run(
+    prompt: string,
+    toolkitNames: string[] = [],
+    handoffs: Handoff[] = [],
+    maxTurns = 10,
+  ) {
     const tools: Tool[] = [];
 
     for (const toolkitName of toolkitNames) {
