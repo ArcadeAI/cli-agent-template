@@ -16,6 +16,16 @@ setOpenAIClient(config);
 
 program.version(pkg.version).name(pkg.name).description(pkg.description);
 
+process.on("SIGINT", () => {
+  console.log("SIGINT: 👋 Bye!");
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM: 👋 Bye!");
+  process.exit(0);
+});
+
 program
   .command("inbox")
   .description("Read your inbox and summarize the emails")
