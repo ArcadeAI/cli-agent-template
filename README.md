@@ -40,3 +40,13 @@ This project was created using `bun init` in bun v1.2.9. [Bun](https://bun.sh) i
 ## Notes
 
 - **Why Bun and TS?**: This is a template project for engineers. JS is the most popular programming language, and type-safety is helpful in IDEs when learning. Bun is a bit of a wildcard, because it's new and less popular than node.js, but it solves all of the TS/compiler problems... which I think will make it easier for folks to get started on the demo. Bun also makes it really easy to package and distribute binaries of applications.
+
+## Testing
+
+```bash
+bun test
+```
+
+Testing Notes:
+
+- We mock all OpenAI API calls, so an API Key is not needed.
