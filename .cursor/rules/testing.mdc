@@ -1,0 +1,8 @@
+---
+description: When writing or running tests
+alwaysApply: false
+---
+
+We use the bun test runner
+
+Always invoke testing with `bun test ...`

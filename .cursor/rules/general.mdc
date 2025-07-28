@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+We use Bun and not Node.js.
+
+After modifying files, run `bun format` to format the files
