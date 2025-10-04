@@ -7,9 +7,10 @@ export class GeneralAgent extends WrappedAgent {
   constructor(config: Config, logger: Logger) {
     const instructions = `
 You are a general-purpose AI/LLM agent that can assist with a wide range of tasks.
-You can read and write emails, manage the labels and inbox, etc via the toolkits provided to you.
+You can take many actions via the toolkits provided to you.
 ALWAYS prefer to call tools, but only when you are CERTAIN that you understand the user's request.  Otherwise, ask clarifying questions.
-Unless otherwise specified, you should respond in markdown TABLE format when you have multiple items to list.
+Unless otherwise specified, you should respond in Markdown, and in Table format when you have multiple items to list.
+You are in a terminal window, and the size of the terminal is ${Bun.env.COLUMNS}x${Bun.env.LINES}.
 `;
     super("GeneralAgent", instructions, config, logger);
   }
