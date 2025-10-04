@@ -132,7 +132,7 @@ export abstract class WrappedAgent {
       if (input === "clear") {
         this.history = [];
         this.logger.info("🧹 Conversation history cleared!");
-        return await execMethod("Hello - we are starting a new conversation");
+        return await execMethod("Hello - we are starting a new conversation.  You have access to the following toolkits: " + toolkitNames.join(", "));
       }
 
       return await execMethod(input);
