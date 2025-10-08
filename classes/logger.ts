@@ -91,6 +91,7 @@ export class Logger {
     message: string,
     level: LogLevel,
     color: (text: string) => string,
+    skipTimestamp: boolean = false,
   ) {
     // Check if we should skip logging based on current log level
     const shouldSkip =
@@ -100,7 +101,7 @@ export class Logger {
       (this.level === LogLevel.INFO && level === LogLevel.DEBUG);
     if (shouldSkip) return;
 
-    const timestamp = this.getTimestamp();
+    const timestamp = skipTimestamp ? "" : this.getTimestamp();
     const spanMarker = this.getSpanMarker();
     const formattedMessage = this.formatMessage(message, color);
     const output = `${timestamp}${spanMarker} ${formattedMessage}`;
@@ -112,6 +113,11 @@ export class Logger {
     } else {
       console.log(output);
     }
+  }
+
+  result(message: string | undefined) {
+    if (!message) return;
+    this.logToConsole(message, LogLevel.INFO, chalk.white, true);
   }
 
   info(message: string | undefined) {
@@ -205,7 +211,7 @@ export class Logger {
     this.toolCallCount = 0;
 
     if (message) {
-      this.info(`${message}\r\n`);
+      this.result(`\r\n${message}\r\n`);
     }
   }
 }
