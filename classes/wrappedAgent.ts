@@ -106,14 +106,27 @@ export abstract class WrappedAgent {
 
     const askQuestion = async (
       questionText: string = `${this.logger.getTimestamp()} ` +
-        chalk.green("?>: "),
+        chalk.green("?> "),
     ) => {
       await new Promise((resolve) => {
+        // Create a custom output stream that colors user input green
+        const mutableStdout = new (require('stream')).Writable({
+          write: (chunk: any, encoding: any, callback: any) => {
+            // Color the input text green
+            process.stdout.write(chalk.green(chunk.toString()), callback);
+          }
+        });
+        mutableStdout.columns = process.stdout.columns;
+        mutableStdout.rows = process.stdout.rows;
+
         const rl = readline.createInterface({
           input: process.stdin,
-          output: process.stdout,
+          output: mutableStdout,
+          terminal: true,
         });
+
         rl.question(questionText, async (answer) => {
+          process.stdout.write('\n'); // Add newline after green input
           await handleInput(answer.trim());
           rl.close();
           resolve(true);
