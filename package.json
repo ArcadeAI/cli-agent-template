@@ -1,10 +1,10 @@
 {
-  "name": "email-agent-template",
+  "name": "chat-agent-template",
   "module": "agent.ts",
   "type": "module",
   "private": true,
   "version": "0.0.1",
-  "description": "Email Agent Template",
+  "description": "Chat Agent Template",
   "peerDependencies": {
     "typescript": "^5"
   },

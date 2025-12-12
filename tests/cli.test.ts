@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { $ } from "bun";
 
-describe("CLI Commands", () => {
+describe("Chat Agent CLI Commands", () => {
   // Helper function to run CLI commands using Bun's $ executor
   const runCommand = async (args: string[]) => {
     try {
@@ -46,8 +46,8 @@ describe("CLI Commands", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Usage:");
-      expect(result.stdout).toContain("email-agent-template");
-      expect(result.stdout).toContain("Email Agent Template");
+      expect(result.stdout).toContain("chat-agent-template");
+      expect(result.stdout).toContain("Chat Agent Template");
       expect(result.stderr).toBe("");
     });
 
@@ -56,19 +56,8 @@ describe("CLI Commands", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Usage:");
-      expect(result.stdout).toContain("email-agent-template");
-      expect(result.stdout).toContain("Email Agent Template");
-      expect(result.stderr).toBe("");
-    });
-
-    it("should display help for specific commands", async () => {
-      const result = await runCommand(["inbox", "--help"]);
-
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("inbox");
-      expect(result.stdout).toContain(
-        "Read your inbox and summarize the emails",
-      );
+      expect(result.stdout).toContain("chat-agent-template");
+      expect(result.stdout).toContain("Chat Agent Template");
       expect(result.stderr).toBe("");
     });
 
@@ -79,17 +68,6 @@ describe("CLI Commands", () => {
       expect(result.stdout).toContain("chat");
       expect(result.stdout).toContain(
         "Start an interactive chat session with the agent",
-      );
-      expect(result.stderr).toBe("");
-    });
-
-    it("should display help for slack-summary command", async () => {
-      const result = await runCommand(["slack-summary", "--help"]);
-
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("slack-summary");
-      expect(result.stdout).toContain(
-        "Read your inbox and summarize the emails",
       );
       expect(result.stderr).toBe("");
     });
