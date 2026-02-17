@@ -2,14 +2,13 @@ import {
   Agent,
   type AgentInputItem,
   Handoff,
-  Runner,
-  type Tool,
+  run,
+  type MCPServerStreamableHttp,
   user,
 } from "@openai/agents";
 
 import { Config } from "./config";
 import type { Logger } from "./logger";
-import { prepareTools } from "../utils/tools";
 import * as readline from "readline";
 import chalk from "chalk";
 
@@ -35,38 +34,25 @@ export abstract class WrappedAgent {
 
   public async run(
     prompt: string,
-    toolkitNames: string[] = [],
+    mcpServers: MCPServerStreamableHttp[] = [],
     handoffs: Handoff[] = [],
     maxTurns = 10,
   ) {
-    const tools: Tool[] = [];
-
-    for (const toolkitName of toolkitNames) {
-      const toolkitTools = await prepareTools(
-        this.config,
-        this.logger,
-        toolkitName,
-      );
-      tools.push(...toolkitTools);
-    }
-
     if (!this.agent) {
       this.agent = new Agent<unknown, "text">({
         name: this.name,
         model: this.config.openai_model,
         instructions: this.instructions,
-        tools,
+        mcpServers,
         handoffs,
       });
     } else {
-      this.agent.tools = tools;
+      this.agent.mcpServers = mcpServers;
     }
-
-    const runner = new Runner(this.agent);
 
     this.history.push(user(prompt));
 
-    const stream = await runner.run(this.agent, this.history, {
+    const stream = await run(this.agent, this.history, {
       maxTurns,
       stream: true,
     });
@@ -92,14 +78,10 @@ export abstract class WrappedAgent {
   public async interactiveChat(
     execMethod: (input: string) => Promise<void>,
     initialMessage?: string,
-    toolkitNames: string[] = [],
     onExit: () => void = () => process.exit(0),
   ) {
     this.logger.info(
       `🤖 Starting chat session with your agent (${this.config.openai_model})`,
-    );
-    this.logger.info(
-      `📦 Available toolkits: ${chalk.cyan(toolkitNames.join(", "))}`,
     );
     this.logger.info("💡 Type 'quit', 'exit', or 'bye' to end the session");
     this.logger.info("💡 Type 'clear' to clear the conversation history");
@@ -110,11 +92,11 @@ export abstract class WrappedAgent {
     ) => {
       await new Promise((resolve) => {
         // Create a custom output stream that colors user input green
-        const mutableStdout = new (require('stream')).Writable({
+        const mutableStdout = new (require("stream")).Writable({
           write: (chunk: any, encoding: any, callback: any) => {
             // Color the input text green
             process.stdout.write(chalk.green(chunk.toString()), callback);
-          }
+          },
         });
         mutableStdout.columns = process.stdout.columns;
         mutableStdout.rows = process.stdout.rows;
@@ -126,7 +108,7 @@ export abstract class WrappedAgent {
         });
 
         rl.question(questionText, async (answer) => {
-          process.stdout.write('\n'); // Add newline after green input
+          process.stdout.write("\n"); // Add newline after green input
           await handleInput(answer.trim());
           rl.close();
           resolve(true);
@@ -145,7 +127,9 @@ export abstract class WrappedAgent {
       if (input === "clear") {
         this.history = [];
         this.logger.info("🧹 Conversation history cleared!");
-        return await execMethod("Hello - we are starting a new conversation.  You have access to the following toolkits: " + toolkitNames.join(", "));
+        return await execMethod(
+          "Hello - we are starting a new conversation.",
+        );
       }
 
       return await execMethod(input);

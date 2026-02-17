@@ -25,8 +25,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       const config = new Config();
@@ -34,16 +33,16 @@ describe("Config", () => {
       expect(config.openai_api_key).toBe("test-openai-key");
       expect(config.openai_model).toBe("gpt-4-turbo");
       expect(config.log_level).toBe("info" as LogLevel);
-      expect(config.arcade_api_key).toBe("test-arcade-key");
-      expect(config.user_id).toBe("test-user-id");
+      expect(config.arcade_gateway_url).toBe(
+        "https://api.arcade.dev/mcp/test-gateway",
+      );
     });
 
     it("should throw error when OPENAI_API_KEY is missing", async () => {
       // Set up all required env vars except OPENAI_API_KEY
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       expect(() => {
@@ -55,8 +54,7 @@ describe("Config", () => {
       // Set up all required env vars except OPENAI_MODEL
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       expect(() => {
@@ -68,8 +66,7 @@ describe("Config", () => {
       // Set up all required env vars except LOG_LEVEL
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       expect(() => {
@@ -77,30 +74,14 @@ describe("Config", () => {
       }).toThrow("LOG_LEVEL key is required");
     });
 
-    it("should throw error when ARCADE_API_KEY is missing", async () => {
-      // Set up all required env vars except ARCADE_API_KEY
+    it("should allow ARCADE_GATEWAY_URL to be optional", async () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.USER_ID = "test-user-id";
 
       const { Config } = await import("../classes/config");
-      expect(() => {
-        new Config();
-      }).toThrow("ARCADE_API_KEY key is required");
-    });
-
-    it("should throw error when USER_ID is missing", async () => {
-      // Set up all required env vars except USER_ID
-      Bun.env.OPENAI_API_KEY = "test-openai-key";
-      Bun.env.OPENAI_MODEL = "gpt-4-turbo";
-      Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-
-      const { Config } = await import("../classes/config");
-      expect(() => {
-        new Config();
-      }).toThrow("USER_ID key is required");
+      const config = new Config();
+      expect(config.arcade_gateway_url).toBeUndefined();
     });
 
     it("should have default values for optional properties", async () => {
@@ -108,8 +89,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       const config = new Config();
@@ -123,8 +103,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "debug";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       const config = new Config();
@@ -135,8 +114,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       const config = new Config();
@@ -147,8 +125,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "warn";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       const config = new Config();
@@ -159,8 +136,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "error";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       const config = new Config();
@@ -175,8 +151,7 @@ describe("Config", () => {
       Bun.env.OPENAI_API_KEY = "test-openai-key";
       Bun.env.OPENAI_MODEL = "gpt-4-turbo";
       Bun.env.LOG_LEVEL = "info";
-      Bun.env.ARCADE_API_KEY = "test-arcade-key";
-      Bun.env.USER_ID = "test-user-id";
+      Bun.env.ARCADE_GATEWAY_URL = "https://api.arcade.dev/mcp/test-gateway";
 
       const { Config } = await import("../classes/config");
       config = new Config();
@@ -188,8 +163,7 @@ describe("Config", () => {
       expect(config).toHaveProperty("log_level");
       expect(config).toHaveProperty("log_color");
       expect(config).toHaveProperty("log_timestamps");
-      expect(config).toHaveProperty("arcade_api_key");
-      expect(config).toHaveProperty("user_id");
+      expect(config).toHaveProperty("arcade_gateway_url");
     });
 
     it("should have correct property types", () => {
@@ -198,8 +172,7 @@ describe("Config", () => {
       expect(typeof config.log_level).toBe("string");
       expect(typeof config.log_color).toBe("boolean");
       expect(typeof config.log_timestamps).toBe("boolean");
-      expect(typeof config.arcade_api_key).toBe("string");
-      expect(typeof config.user_id).toBe("string");
+      expect(typeof config.arcade_gateway_url).toBe("string");
     });
   });
 });
