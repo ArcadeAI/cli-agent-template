@@ -6,14 +6,14 @@ CLI agent template built with Bun + TypeScript. Provides an interactive chat int
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `bun install` | Install dependencies |
-| `bun test` | Run tests (mocked, no API keys needed) |
-| `bun lint` | Check formatting (Prettier) |
-| `bun format` | Fix formatting |
-| `bun build agent.ts --compile --outfile agent` | Compile to standalone binary |
-| `./agent.ts chat [message]` | Run the agent |
+| Command                                        | Purpose                                |
+| ---------------------------------------------- | -------------------------------------- |
+| `bun install`                                  | Install dependencies                   |
+| `bun test`                                     | Run tests (mocked, no API keys needed) |
+| `bun lint`                                     | Check formatting (Prettier)            |
+| `bun format`                                   | Fix formatting                         |
+| `bun build agent.ts --compile --outfile agent` | Compile to standalone binary           |
+| `./agent.ts chat [message]`                    | Run the agent                          |
 
 ## Project Structure
 
