@@ -1,51 +1,85 @@
-# Arcade CLI Agent Template
+# CLI Agent Template
+
+A template for building interactive CLI chat agents using [OpenAI's Agents SDK](https://openai.github.io/openai-agents-js/) and [Arcade MCP Gateways](https://docs.arcade.dev/en/guides/mcp-gateways). Built with Bun and TypeScript.
 
 ## Prerequisites
 
-- Bun installed on your computer - https://bun.com/docs/installation
-- An OpenAI API Key - https://openai.com/
-- An Arcade MCP Gateway URL - https://docs.arcade.dev/en/guides/mcp-gateways
+- [Bun](https://bun.com/docs/installation) installed on your computer
+- An [OpenAI API Key](https://openai.com/)
+- An [Arcade MCP Gateway URL](https://docs.arcade.dev/en/guides/mcp-gateways)
 
-## This Repo
+## Getting Started
 
-To install dependencies:
+Install dependencies:
 
 ```bash
 bun install
 ```
 
-Then, set up the environment variables you will need:
+Set up your environment variables:
 
 ```bash
 cp .env.example .env
 # fill it out with your information!
 ```
 
-To run:
+The `.env` file requires:
+
+- `OPENAI_API_KEY` — Your OpenAI API key
+- `OPENAI_MODEL` — The model to use (e.g. `gpt-5.2`)
+- `LOG_LEVEL` — Logging verbosity (`info`, `debug`, etc.)
+- `ARCADE_GATEWAY_URL` — Your Arcade MCP Gateway URL
+
+## Usage
+
+Start an interactive chat session:
 
 ```bash
 ./agent.ts chat
 ```
 
-You can also override the gateway URL via CLI flag:
+Start a chat with an initial message:
+
+```bash
+./agent.ts chat "What can you help me with?"
+```
+
+Override the gateway URL via CLI flag:
 
 ```bash
 ./agent.ts chat --gateway-url https://api.arcade.dev/mcp/your-gateway-slug
 ```
 
-To Compile as a single-file executable
+### In-Chat Commands
+
+- `clear` — Clear conversation history and start fresh
+- `quit` / `exit` — End the session
+
+## Compiling
+
+Build a single-file executable:
 
 ```bash
 bun build ./agent.ts --compile --outfile agent
 ```
 
-Now you can run the program with `./agent` (no `.ts`) directly.
+Then run it directly with `./agent`.
 
-This project was created using `bun init` in bun v1.2.9. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Project Structure
 
-## Notes
+```
+agent.ts              — CLI entrypoint (Commander-based)
+agents/general.ts     — General-purpose chat agent
+classes/config.ts     — Environment variable configuration
+classes/logger.ts     — Logging with timestamps and spinners
+classes/wrappedAgent.ts — Base agent class (history, streaming, interactive chat)
+utils/client.ts       — OpenAI client setup
+utils/tools.ts        — Arcade MCP server connection with OAuth
+```
 
-- **Why Bun and TS?**: This is a template project for engineers. JS is the most popular programming language, and type-safety is helpful in IDEs when learning. Bun is a bit of a wildcard, because it's new and less popular than node.js, but it solves all of the TS/compiler problems... which I think will make it easier for folks to get started on the demo. Bun also makes it really easy to package and distribute binaries of applications.
+## How It Works
+
+The agent connects to an Arcade MCP Gateway, which provides tools the LLM can call during conversation. On first use, it opens a browser for OAuth authentication and caches tokens locally. Conversations are streamed to the terminal in real time.
 
 ## Testing
 
@@ -53,6 +87,8 @@ This project was created using `bun init` in bun v1.2.9. [Bun](https://bun.sh) i
 bun test
 ```
 
-Testing Notes:
+All OpenAI API calls are mocked, so no API key is needed for tests.
 
-- We mock all OpenAI API calls, so an API Key is not needed.
+## Notes
+
+- **Why Bun + TypeScript?** JS is the most popular programming language, and type-safety helps when learning. Bun eliminates TS compilation headaches and makes it easy to package and distribute binaries.
