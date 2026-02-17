@@ -35,3 +35,5 @@ CLI agent template built with Bun + TypeScript. Provides an interactive chat int
 ## CI
 
 GitHub Actions runs three jobs: compile, lint, test. All must pass.
+
+Run `bun format` before committing to avoid lint failures.
