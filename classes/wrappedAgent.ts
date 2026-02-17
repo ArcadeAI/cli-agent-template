@@ -92,7 +92,7 @@ export abstract class WrappedAgent {
     ) => {
       await new Promise((resolve) => {
         // Create a custom output stream that colors user input green
-        const mutableStdout = new (require("stream")).Writable({
+        const mutableStdout = new (require("stream").Writable)({
           write: (chunk: any, encoding: any, callback: any) => {
             // Color the input text green
             process.stdout.write(chalk.green(chunk.toString()), callback);
@@ -127,9 +127,7 @@ export abstract class WrappedAgent {
       if (input === "clear") {
         this.history = [];
         this.logger.info("🧹 Conversation history cleared!");
-        return await execMethod(
-          "Hello - we are starting a new conversation.",
-        );
+        return await execMethod("Hello - we are starting a new conversation.");
       }
 
       return await execMethod(input);
