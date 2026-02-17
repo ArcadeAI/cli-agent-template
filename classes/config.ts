@@ -6,8 +6,7 @@ export class Config {
   public readonly log_level: LogLevel;
   public readonly log_color: boolean = true;
   public readonly log_timestamps: boolean = true;
-  public readonly arcade_api_key: string;
-  public readonly user_id: string;
+  public arcade_gateway_url: string | undefined;
 
   constructor() {
     const openai_api_key = Bun.env.OPENAI_API_KEY;
@@ -28,16 +27,6 @@ export class Config {
     }
     this.log_level = log_level as LogLevel;
 
-    const arcade_api_key = Bun.env.ARCADE_API_KEY;
-    if (!arcade_api_key) {
-      throw new Error("ARCADE_API_KEY key is required");
-    }
-    this.arcade_api_key = arcade_api_key;
-
-    const user_id = Bun.env.USER_ID;
-    if (!user_id) {
-      throw new Error("USER_ID key is required");
-    }
-    this.user_id = user_id;
+    this.arcade_gateway_url = Bun.env.ARCADE_GATEWAY_URL;
   }
 }

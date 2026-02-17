@@ -4,7 +4,7 @@
 
 - Bun installed on your computer - https://bun.com/docs/installation
 - An OpenAI API Key - https://openai.com/
-- An Arcade.dev API key - https://www.arcade.dev/
+- An Arcade MCP Gateway URL - https://docs.arcade.dev/en/guides/mcp-gateways
 
 ## This Repo
 
@@ -24,7 +24,13 @@ cp .env.example .env
 To run:
 
 ```bash
-./agent.ts
+./agent.ts chat
+```
+
+You can also override the gateway URL via CLI flag:
+
+```bash
+./agent.ts chat --gateway-url https://api.arcade.dev/mcp/your-gateway-slug
 ```
 
 To Compile as a single-file executable
