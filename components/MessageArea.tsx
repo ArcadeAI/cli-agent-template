@@ -94,6 +94,10 @@ export function MessageArea({
                     ` 🕝 ${Math.round((Date.now() - startTime) / 1000)}s`}
                   {toolCallCount > 0 &&
                     ` | 🛠️ ${toolCallCount} tool call${toolCallCount > 1 ? "s" : ""}`}
+                  {" | "}
+                </Text>
+                <Text color="yellow" dimColor>
+                  [esc] to cancel
                 </Text>
               </Box>
               {streamingText && <Text>{renderMarkdown(streamingText)}</Text>}

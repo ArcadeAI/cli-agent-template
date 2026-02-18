@@ -4,6 +4,7 @@ import type { MCPServerStreamableHttp } from "@openai/agents";
 import type { GeneralAgent } from "../agents/general.js";
 import type { Logger, LogEvent } from "../classes/logger.js";
 import type { Config } from "../classes/config.js";
+import chalk from "chalk";
 import { renderMarkdown } from "../utils/markdown.js";
 import { MessageArea } from "./MessageArea.js";
 import { InputBox } from "./InputBox.js";
@@ -49,6 +50,7 @@ export function App({
   const processingRef = useRef(false);
   const queueRef = useRef<string[]>([]);
   const [queueCount, setQueueCount] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
   const initialProcessed = useRef(false);
   const [focusArea, setFocusArea] = useState<FocusArea>("input");
   const [scrollX, setScrollX] = useState(0);
@@ -105,6 +107,12 @@ export function App({
     setFocusArea("input");
   }, []);
 
+  const handleCancel = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+  }, []);
+
   // Subscribe to logger events
   useEffect(() => {
     const unsubLog = logger.onLog((event: LogEvent) => {
@@ -147,6 +155,9 @@ export function App({
       setToolCallCount(0);
       setStartTime(Date.now());
 
+      const abort = new AbortController();
+      abortRef.current = abort;
+
       try {
         const stream = await agent.chat(input, [mcpServer]);
         const textStream = stream.toTextStream({
@@ -155,8 +166,41 @@ export function App({
 
         let accumulated = "";
         for await (const chunk of textStream) {
+          if (abort.signal.aborted) break;
           accumulated += chunk;
           setStreamingText(accumulated);
+        }
+
+        if (abort.signal.aborted) {
+          const cancelMsg = chalk.red("Response cancelled.");
+          if (accumulated) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content: accumulated,
+                rendered: renderMarkdown(accumulated),
+                timestamp: logger.getTimestamp(),
+              },
+              {
+                role: "assistant",
+                content: cancelMsg,
+                rendered: cancelMsg,
+                timestamp: logger.getTimestamp(),
+              },
+            ]);
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content: cancelMsg,
+                rendered: cancelMsg,
+                timestamp: logger.getTimestamp(),
+              },
+            ]);
+          }
+          return;
         }
 
         const finalOutput = await agent.finalizeStream(stream);
@@ -183,6 +227,7 @@ export function App({
           },
         ]);
       } finally {
+        abortRef.current = null;
         setIsStreaming(false);
         setStreamingText("");
         setStartTime(null);
@@ -269,10 +314,12 @@ export function App({
         contextDir={config.context_dir}
         queueCount={queueCount}
         focus={focusArea === "input"}
+        isStreaming={isStreaming}
         onToggleFocus={handleToggleFocus}
         onScroll={handleScroll}
         onScrollVertical={handleScrollVertical}
         onReturnToInput={handleReturnToInput}
+        onCancel={handleCancel}
       />
     </Box>
   );
