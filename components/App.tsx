@@ -4,6 +4,7 @@ import type { MCPServerStreamableHttp } from "@openai/agents";
 import type { GeneralAgent } from "../agents/general.js";
 import type { Logger, LogEvent, ToolCallInfo } from "../classes/logger.js";
 import type { Config } from "../classes/config.js";
+import chalk from "chalk";
 import { renderMarkdown } from "../utils/markdown.js";
 import { MessageArea } from "./MessageArea.js";
 import { InputBox } from "./InputBox.js";
@@ -50,6 +51,7 @@ export function App({
   const processingRef = useRef(false);
   const queueRef = useRef<string[]>([]);
   const [queueCount, setQueueCount] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
   const initialProcessed = useRef(false);
   const [focusArea, setFocusArea] = useState<FocusArea>("input");
   const [scrollX, setScrollX] = useState(0);
@@ -104,6 +106,12 @@ export function App({
 
   const handleReturnToInput = useCallback(() => {
     setFocusArea("input");
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
   }, []);
 
   // Subscribe to logger events
@@ -167,11 +175,15 @@ export function App({
       toolCallsRef.current = [];
       setStartTime(Date.now());
 
+      const abort = new AbortController();
+      abortRef.current = abort;
+
       try {
         const stream = await agent.chat(input, [mcpServer]);
 
         let accumulated = "";
         for await (const event of stream) {
+          if (abort.signal.aborted) break;
           if (
             event.type === "raw_model_stream_event" &&
             event.data.type === "output_text_delta"
@@ -199,6 +211,38 @@ export function App({
           }
         }
 
+        if (abort.signal.aborted) {
+          const cancelMsg = chalk.red("Response cancelled.");
+          if (accumulated) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content: accumulated,
+                rendered: renderMarkdown(accumulated),
+                timestamp: logger.getTimestamp(),
+              },
+              {
+                role: "assistant",
+                content: cancelMsg,
+                rendered: cancelMsg,
+                timestamp: logger.getTimestamp(),
+              },
+            ]);
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: "assistant",
+                content: cancelMsg,
+                rendered: cancelMsg,
+                timestamp: logger.getTimestamp(),
+              },
+            ]);
+          }
+          return;
+        }
+
         const finalOutput = await agent.finalizeStream(stream);
         const content = finalOutput || accumulated;
 
@@ -224,6 +268,7 @@ export function App({
           },
         ]);
       } finally {
+        abortRef.current = null;
         setIsStreaming(false);
         setStreamingText("");
         setStartTime(null);
@@ -311,10 +356,12 @@ export function App({
         contextDir={config.context_dir}
         queueCount={queueCount}
         focus={focusArea === "input"}
+        isStreaming={isStreaming}
         onToggleFocus={handleToggleFocus}
         onScroll={handleScroll}
         onScrollVertical={handleScrollVertical}
         onReturnToInput={handleReturnToInput}
+        onCancel={handleCancel}
       />
     </Box>
   );

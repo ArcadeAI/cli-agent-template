@@ -129,6 +129,10 @@ export function MessageArea({
                   Thinking...
                   {startTime &&
                     ` 🕝 ${Math.round((Date.now() - startTime) / 1000)}s`}
+                  {" | "}
+                </Text>
+                <Text color="yellow" dimColor>
+                  [esc] to cancel
                 </Text>
               </Box>
               <ToolCallTree toolCalls={toolCalls} />
