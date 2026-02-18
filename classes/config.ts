@@ -1,3 +1,4 @@
+import * as path from "path";
 import type { LogLevel } from "./logger";
 
 export class Config {
@@ -7,6 +8,7 @@ export class Config {
   public readonly log_color: boolean = true;
   public readonly log_timestamps: boolean = true;
   public arcade_gateway_url: string | undefined;
+  public readonly context_dir: string;
 
   constructor() {
     const openai_api_key = Bun.env.OPENAI_API_KEY;
@@ -28,5 +30,7 @@ export class Config {
     this.log_level = log_level as LogLevel;
 
     this.arcade_gateway_url = Bun.env.ARCADE_GATEWAY_URL;
+    this.context_dir =
+      Bun.env.CONTEXT_DIR || path.join(process.cwd(), ".context", "arcade");
   }
 }

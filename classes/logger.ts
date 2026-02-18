@@ -1,7 +1,5 @@
-import chalk from "chalk";
-import ora, { type Ora } from "ora";
+import { EventEmitter } from "events";
 import type { Config } from "./config";
-import { Writable } from "stream";
 
 export enum LogLevel {
   DEBUG = "debug",
@@ -10,48 +8,22 @@ export enum LogLevel {
   ERROR = "error",
 }
 
-const SPAN_UPDATE_INTERVAL = 200;
-
-class LoggerStream extends Writable {
-  public appendedString: string = "";
-  private logger: Logger;
-  private lastUpdatedAt: number = 0;
-
-  constructor(logger: Logger) {
-    super();
-    this.logger = logger;
-  }
-
-  _write(
-    chunk: any,
-    encoding: string,
-    callback: (error?: Error | null) => void,
-  ) {
-    const stringChunk = String(chunk);
-    this.appendedString += stringChunk;
-    if (Date.now() - this.lastUpdatedAt > SPAN_UPDATE_INTERVAL) {
-      this.logger.streamToSpan(this.appendedString);
-      this.lastUpdatedAt = Date.now();
-    }
-    callback();
-  }
+export interface LogEvent {
+  level: LogLevel;
+  message: string;
+  timestamp: string;
 }
 
-export class Logger {
+export class Logger extends EventEmitter {
   private level: LogLevel;
   private color: boolean;
   private includeTimestamps: boolean;
-  private spanStartTime: number | undefined = undefined;
-  private spinner: Ora | undefined = undefined;
-  private toolCallCount: number = 0;
-  private updateInterval: NodeJS.Timeout | undefined = undefined;
-  public stream: LoggerStream;
 
   constructor(config: Config) {
+    super();
     this.includeTimestamps = config.log_timestamps;
     this.level = config.log_level;
     this.color = config.log_color;
-    this.stream = new LoggerStream(this);
   }
 
   public getTimestamp() {
@@ -62,156 +34,59 @@ export class Logger {
       second: "2-digit",
     });
 
-    return this.includeTimestamps
-      ? this.color
-        ? chalk.gray(`[${timestamp}]`)
-        : `[${timestamp}]`
-      : "";
+    return this.includeTimestamps ? `[${timestamp}]` : "";
   }
 
-  private getSpanMarker() {
-    return this.spanStartTime !== undefined ? " ├─" : "";
-  }
-
-  private getDuration() {
-    return Math.round((Date.now() - (this.spanStartTime ?? Date.now())) / 1000);
-  }
-
-  private getToolCallStats() {
-    const duration = this.getDuration();
-    const toolCallText = `  🕝 duration: ${duration}s | 🛠️ tool calls: ${this.toolCallCount}`;
-    return this.color ? chalk.dim(toolCallText) : toolCallText;
-  }
-
-  private formatMessage(message: string, color: (text: string) => string) {
-    return this.color ? color(message) : message;
-  }
-
-  private logToConsole(
-    message: string,
-    level: LogLevel,
-    color: (text: string) => string,
-    skipTimestamp: boolean = false,
-  ) {
-    // Check if we should skip logging based on current log level
-    const shouldSkip =
+  private shouldSkip(level: LogLevel) {
+    return (
       (this.level === LogLevel.ERROR && level !== LogLevel.ERROR) ||
       (this.level === LogLevel.WARN &&
         (level === LogLevel.INFO || level === LogLevel.DEBUG)) ||
-      (this.level === LogLevel.INFO && level === LogLevel.DEBUG);
-    if (shouldSkip) return;
-
-    const timestamp = skipTimestamp ? "" : this.getTimestamp();
-    const spanMarker = this.getSpanMarker();
-    const formattedMessage = this.formatMessage(message, color);
-    const output = `${timestamp}${spanMarker} ${formattedMessage}`;
-
-    if (level === LogLevel.ERROR || level === LogLevel.WARN) {
-      console.error(output);
-    } else if (level === LogLevel.DEBUG) {
-      console.debug(output);
-    } else {
-      console.log(output);
-    }
+      (this.level === LogLevel.INFO && level === LogLevel.DEBUG)
+    );
   }
 
-  result(message: string | undefined) {
-    if (!message) return;
-    this.logToConsole(message, LogLevel.INFO, chalk.white, true);
+  private log(message: string, level: LogLevel) {
+    if (this.shouldSkip(level)) return;
+    const event: LogEvent = {
+      level,
+      message,
+      timestamp: this.getTimestamp(),
+    };
+    this.emit("log", event);
   }
 
   info(message: string | undefined) {
     if (!message) return;
-    this.logToConsole(message, LogLevel.INFO, chalk.white);
+    this.log(message, LogLevel.INFO);
   }
 
   warn(message: string | undefined) {
     if (!message) return;
-    this.logToConsole(message, LogLevel.WARN, chalk.yellow);
+    this.log(message, LogLevel.WARN);
   }
 
   error(message: string | undefined) {
     if (!message) return;
-    this.logToConsole(message, LogLevel.ERROR, chalk.red);
+    this.log(message, LogLevel.ERROR);
   }
 
   debug(message: string | undefined) {
     if (!message) return;
-    this.logToConsole(message, LogLevel.DEBUG, chalk.gray);
+    this.log(message, LogLevel.DEBUG);
   }
 
   incrementToolCalls() {
-    this.toolCallCount++;
-    this.updateSpanDisplay();
+    this.emit("toolCall");
   }
 
-  private updateSpanDisplay() {
-    if (!this.spinner) return;
-    const mainMessage = this.spinner.text.split("\n")[0];
-    this.spinner.text = `${mainMessage}\n${this.getToolCallStats()}`;
+  onLog(callback: (event: LogEvent) => void) {
+    this.on("log", callback);
+    return () => this.off("log", callback);
   }
 
-  startSpan(message: string) {
-    this.info(message);
-    this.spanStartTime = Date.now();
-    this.toolCallCount = 0;
-    this.stream.appendedString = "";
-    this.spinner = ora(this.formatMessage(message, chalk.cyan)).start();
-
-    this.updateInterval = setInterval(() => this.updateSpanDisplay(), 1000);
-  }
-
-  updateSpan(message: string, emoji: string) {
-    if (!this.spinner) return;
-
-    const originalText = this.spinner.text;
-    const timestamp = this.getTimestamp();
-    const spanMarker = this.getSpanMarker();
-    const formattedMessage = this.formatMessage(message, chalk.white);
-
-    this.spinner.stopAndPersist({
-      text: formattedMessage,
-      symbol: `${timestamp}${spanMarker} ${emoji}`,
-    });
-
-    this.spinner.start(this.formatMessage(originalText, chalk.cyan));
-    this.updateSpanDisplay();
-  }
-
-  streamToSpan(message: string) {
-    if (!this.spinner) return;
-
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = undefined;
-    }
-
-    this.spinner.text = `Streaming: \r\n` + message;
-  }
-
-  endSpan(message?: string) {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = undefined;
-    }
-
-    this.stream.appendedString = "";
-
-    const doneMessage = "Done!";
-    const timestamp = this.getTimestamp();
-    const duration = this.getDuration();
-
-    this.spinner?.stopAndPersist({
-      text: this.formatMessage(`${doneMessage} (${duration}s)`, chalk.cyan),
-      symbol: `${timestamp} ✅`,
-    });
-
-    this.spinner = undefined;
-    this.spanStartTime = undefined;
-    this.toolCallCount = 0;
-
-    if (message) {
-      this.result(`\r\n${message}\r\n`);
-    }
+  onToolCall(callback: () => void) {
+    this.on("toolCall", callback);
+    return () => this.off("toolCall", callback);
   }
 }

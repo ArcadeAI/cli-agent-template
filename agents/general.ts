@@ -2,7 +2,6 @@ import { WrappedAgent } from "../classes/wrappedAgent";
 import type { Config } from "../classes/config";
 import type { Logger } from "../classes/logger";
 import type { MCPServerStreamableHttp } from "@openai/agents";
-import chalk from "chalk";
 
 export class GeneralAgent extends WrappedAgent {
   constructor(config: Config, logger: Logger) {
@@ -17,9 +16,6 @@ You are in a terminal window, and the size of the terminal is ${Bun.env.COLUMNS}
   }
 
   async chat(prompt: string, mcpServers: MCPServerStreamableHttp[] = []) {
-    this.logger.startSpan(chalk.gray(`Thinking...`));
-    const stream = await this.run(prompt, mcpServers);
-    this.logger.endSpan();
-    return stream;
+    return await this.run(prompt, mcpServers);
   }
 }
