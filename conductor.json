@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "setup": "cp \"$CONDUCTOR_ROOT_PATH/.env\" .env 2>/dev/null; bun install",
+    "run": "./agent.ts chat"
+  }
+}
