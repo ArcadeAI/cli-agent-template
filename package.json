@@ -14,7 +14,7 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "prettier --check .",
-    "compile": "bun build agent.ts --compile --outfile agent",
+    "compile": "bun build agent.ts --compile --outfile agent --external react-devtools-core",
     "clear": "rm -rf ${CONTEXT_DIR:-.context/arcade}"
   },
   "dependencies": {
@@ -26,7 +26,6 @@
     "ink-spinner": "^5.0.0",
     "ink-text-input": "^6.0.0",
     "openai": "^6.20.0",
-    "ora": "^8.2.0",
     "react": "^19.2.4"
   },
   "devDependencies": {
