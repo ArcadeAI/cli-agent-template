@@ -84,6 +84,27 @@ describe("Config", () => {
       expect(config.arcade_gateway_url).toBeUndefined();
     });
 
+    it("should default context_dir to .context/arcade", async () => {
+      Bun.env.OPENAI_API_KEY = "test-openai-key";
+      Bun.env.OPENAI_MODEL = "gpt-4-turbo";
+      Bun.env.LOG_LEVEL = "info";
+
+      const { Config } = await import("../classes/config");
+      const config = new Config();
+      expect(config.context_dir).toContain(".context/arcade");
+    });
+
+    it("should allow CONTEXT_DIR override", async () => {
+      Bun.env.OPENAI_API_KEY = "test-openai-key";
+      Bun.env.OPENAI_MODEL = "gpt-4-turbo";
+      Bun.env.LOG_LEVEL = "info";
+      Bun.env.CONTEXT_DIR = "/tmp/custom-context";
+
+      const { Config } = await import("../classes/config");
+      const config = new Config();
+      expect(config.context_dir).toBe("/tmp/custom-context");
+    });
+
     it("should have default values for optional properties", async () => {
       // Set up all required environment variables
       Bun.env.OPENAI_API_KEY = "test-openai-key";
@@ -164,6 +185,7 @@ describe("Config", () => {
       expect(config).toHaveProperty("log_color");
       expect(config).toHaveProperty("log_timestamps");
       expect(config).toHaveProperty("arcade_gateway_url");
+      expect(config).toHaveProperty("context_dir");
     });
 
     it("should have correct property types", () => {
@@ -173,6 +195,7 @@ describe("Config", () => {
       expect(typeof config.log_color).toBe("boolean");
       expect(typeof config.log_timestamps).toBe("boolean");
       expect(typeof config.arcade_gateway_url).toBe("string");
+      expect(typeof config.context_dir).toBe("string");
     });
   });
 });

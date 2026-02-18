@@ -9,8 +9,6 @@ import {
 
 import { Config } from "./config";
 import type { Logger } from "./logger";
-import * as readline from "readline";
-import chalk from "chalk";
 
 export abstract class WrappedAgent {
   history: AgentInputItem[] = [];
@@ -57,85 +55,17 @@ export abstract class WrappedAgent {
       stream: true,
     });
 
-    stream
-      .toTextStream({ compatibleWithNodeStreams: true })
-      .pipe(this.logger.stream);
-    await stream.completed;
+    return stream;
+  }
 
-    this.logger.endSpan(stream.finalOutput);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async finalizeStream(stream: any) {
+    await stream.completed;
 
     if (stream.history.length > 0) {
       this.history = stream.history;
     }
 
-    if (stream.finalOutput) {
-      this.logger.debug(stream.finalOutput);
-    }
-
-    return stream;
-  }
-
-  public async interactiveChat(
-    execMethod: (input: string) => Promise<void>,
-    initialMessage?: string,
-    onExit: () => void = () => process.exit(0),
-  ) {
-    this.logger.info(
-      `🤖 Starting chat session with your agent (${this.config.openai_model})`,
-    );
-    this.logger.info("💡 Type 'quit', 'exit', or 'bye' to end the session");
-    this.logger.info("💡 Type 'clear' to clear the conversation history");
-
-    const askQuestion = async (
-      questionText: string = `${this.logger.getTimestamp()} ` +
-        chalk.green("?> "),
-    ) => {
-      await new Promise((resolve) => {
-        // Create a custom output stream that colors user input green
-        const mutableStdout = new (require("stream").Writable)({
-          write: (chunk: any, encoding: any, callback: any) => {
-            // Color the input text green
-            process.stdout.write(chalk.green(chunk.toString()), callback);
-          },
-        });
-        mutableStdout.columns = process.stdout.columns;
-        mutableStdout.rows = process.stdout.rows;
-
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: mutableStdout,
-          terminal: true,
-        });
-
-        rl.question(questionText, async (answer) => {
-          process.stdout.write("\n"); // Add newline after green input
-          await handleInput(answer.trim());
-          rl.close();
-          resolve(true);
-        });
-      });
-
-      await askQuestion();
-    };
-
-    const handleInput = async (input: string) => {
-      if (input.toLowerCase() === "quit" || input.toLowerCase() === "exit") {
-        console.log("👋 Goodbye!");
-        onExit?.();
-      }
-
-      if (input === "clear") {
-        this.history = [];
-        this.logger.info("🧹 Conversation history cleared!");
-        return await execMethod("Hello - we are starting a new conversation.");
-      }
-
-      return await execMethod(input);
-    };
-
-    if (initialMessage) {
-      await handleInput(initialMessage);
-    }
-    await askQuestion();
+    return stream.finalOutput;
   }
 }

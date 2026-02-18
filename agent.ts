@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+import React from "react";
+import { render } from "ink";
 import { program } from "@commander-js/extra-typings";
 import * as pkg from "./package.json";
 import { Config } from "./classes/config";
@@ -9,6 +11,7 @@ import { setOpenAIClient } from "./utils/client";
 import { createMcpServer } from "./utils/tools";
 
 import { GeneralAgent } from "./agents/general";
+import { App } from "./components/App";
 
 const config = new Config();
 const logger = new Logger(config);
@@ -25,13 +28,11 @@ async function cleanup() {
 }
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT: 👋 Bye!");
   await cleanup();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM: 👋 Bye!");
   await cleanup();
   process.exit(0);
 });
@@ -60,15 +61,19 @@ program
     await mcpServer.connect();
 
     const agent = new GeneralAgent(config, logger);
-    await agent.interactiveChat(
-      async (input: string) => {
-        await agent.chat(input, [mcpServer!]);
-      },
-      message,
-      async () => {
-        await cleanup();
-        process.exit(0);
-      },
+
+    render(
+      React.createElement(App, {
+        agent,
+        mcpServer: mcpServer!,
+        logger,
+        config,
+        initialMessage: message,
+        onExit: async () => {
+          await cleanup();
+          process.exit(0);
+        },
+      }),
     );
   });
 
