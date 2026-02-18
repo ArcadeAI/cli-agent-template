@@ -9,6 +9,7 @@ export interface MessageData {
   content: string;
   rendered: string;
   timestamp: string;
+  toolCalls?: import("../classes/logger.js").ToolCallInfo[];
 }
 
 interface MessageProps extends MessageData {

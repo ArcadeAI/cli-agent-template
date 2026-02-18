@@ -14,6 +14,17 @@ export interface LogEvent {
   timestamp: string;
 }
 
+export type ToolCallStatus = "running" | "completed";
+
+export interface ToolCallInfo {
+  callId: string;
+  name: string;
+  args: string;
+  status: ToolCallStatus;
+  startedAt: number;
+  duration?: number;
+}
+
 export class Logger extends EventEmitter {
   private level: LogLevel;
   private color: boolean;
@@ -76,8 +87,26 @@ export class Logger extends EventEmitter {
     this.log(message, LogLevel.DEBUG);
   }
 
-  incrementToolCalls() {
-    this.emit("toolCall");
+  toolCallStarted(callId: string, name: string, args: string) {
+    const info: ToolCallInfo = {
+      callId,
+      name,
+      args,
+      status: "running",
+      startedAt: Date.now(),
+    };
+    this.emit("toolCallUpdate", info);
+  }
+
+  toolCallCompleted(callId: string, name: string) {
+    const info: ToolCallInfo = {
+      callId,
+      name,
+      args: "",
+      status: "completed",
+      startedAt: 0,
+    };
+    this.emit("toolCallUpdate", info);
   }
 
   onLog(callback: (event: LogEvent) => void) {
@@ -85,8 +114,8 @@ export class Logger extends EventEmitter {
     return () => this.off("log", callback);
   }
 
-  onToolCall(callback: () => void) {
-    this.on("toolCall", callback);
-    return () => this.off("toolCall", callback);
+  onToolCallUpdate(callback: (info: ToolCallInfo) => void) {
+    this.on("toolCallUpdate", callback);
+    return () => this.off("toolCallUpdate", callback);
   }
 }

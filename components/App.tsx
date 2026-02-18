@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Box, useApp, useStdout } from "ink";
 import type { MCPServerStreamableHttp } from "@openai/agents";
 import type { GeneralAgent } from "../agents/general.js";
-import type { Logger, LogEvent } from "../classes/logger.js";
+import type { Logger, LogEvent, ToolCallInfo } from "../classes/logger.js";
 import type { Config } from "../classes/config.js";
 import chalk from "chalk";
 import { renderMarkdown } from "../utils/markdown.js";
@@ -45,7 +45,8 @@ export function App({
   ]);
   const [streamingText, setStreamingText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [toolCallCount, setToolCallCount] = useState(0);
+  const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
+  const toolCallsRef = useRef<ToolCallInfo[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const processingRef = useRef(false);
   const queueRef = useRef<string[]>([]);
@@ -127,8 +128,26 @@ export function App({
       ]);
     });
 
-    const unsubTool = logger.onToolCall(() => {
-      setToolCallCount((prev) => prev + 1);
+    const unsubTool = logger.onToolCallUpdate((info: ToolCallInfo) => {
+      setToolCalls((prev) => {
+        let next: ToolCallInfo[];
+        if (info.status === "running") {
+          next = [...prev, info];
+        } else {
+          // Mark existing call as completed
+          next = prev.map((tc) =>
+            tc.callId === info.callId
+              ? {
+                  ...tc,
+                  status: "completed" as const,
+                  duration: Date.now() - tc.startedAt,
+                }
+              : tc,
+          );
+        }
+        toolCallsRef.current = next;
+        return next;
+      });
     });
 
     return () => {
@@ -152,7 +171,8 @@ export function App({
 
       setIsStreaming(true);
       setStreamingText("");
-      setToolCallCount(0);
+      setToolCalls([]);
+      toolCallsRef.current = [];
       setStartTime(Date.now());
 
       const abort = new AbortController();
@@ -160,15 +180,35 @@ export function App({
 
       try {
         const stream = await agent.chat(input, [mcpServer]);
-        const textStream = stream.toTextStream({
-          compatibleWithNodeStreams: true,
-        });
 
         let accumulated = "";
-        for await (const chunk of textStream) {
+        for await (const event of stream) {
           if (abort.signal.aborted) break;
-          accumulated += chunk;
-          setStreamingText(accumulated);
+          if (
+            event.type === "raw_model_stream_event" &&
+            event.data.type === "output_text_delta"
+          ) {
+            accumulated += (event.data as { delta: string }).delta;
+            setStreamingText(accumulated);
+          } else if (event.type === "run_item_stream_event") {
+            const raw = event.item?.rawItem as {
+              name?: string;
+              callId?: string;
+              arguments?: string;
+            };
+            if (event.name === "tool_called") {
+              logger.toolCallStarted(
+                raw?.callId || "",
+                raw?.name || "unknown",
+                raw?.arguments || "",
+              );
+            } else if (event.name === "tool_output") {
+              logger.toolCallCompleted(
+                raw?.callId || "",
+                raw?.name || "unknown",
+              );
+            }
+          }
         }
 
         if (abort.signal.aborted) {
@@ -213,6 +253,7 @@ export function App({
             content,
             rendered: renderMarkdown(content),
             timestamp: logger.getTimestamp(),
+            toolCalls: toolCallsRef.current,
           },
         ]);
       } catch (err) {
@@ -231,7 +272,8 @@ export function App({
         setIsStreaming(false);
         setStreamingText("");
         setStartTime(null);
-        setToolCallCount(0);
+        setToolCalls([]);
+        toolCallsRef.current = [];
       }
     },
     [agent, mcpServer, logger],
@@ -300,7 +342,7 @@ export function App({
         messages={messages}
         streamingText={streamingText}
         isStreaming={isStreaming}
-        toolCallCount={toolCallCount}
+        toolCalls={toolCalls}
         startTime={startTime}
         scrollX={scrollX}
         scrollY={scrollY}
