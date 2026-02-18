@@ -137,30 +137,36 @@ describe("Logger", () => {
       logger = new Logger(config);
     });
 
-    it("should have incrementToolCalls method", () => {
-      expect(typeof logger.incrementToolCalls).toBe("function");
-      expect(() => logger.incrementToolCalls()).not.toThrow();
+    it("should have toolCallStarted and toolCallCompleted methods", () => {
+      expect(typeof logger.toolCallStarted).toBe("function");
+      expect(typeof logger.toolCallCompleted).toBe("function");
+      expect(() => logger.toolCallStarted("id1", "test", "{}")).not.toThrow();
     });
 
-    it("should emit toolCall events", () => {
-      let called = 0;
-      logger.onToolCall(() => called++);
+    it("should emit toolCallUpdate events", () => {
+      const updates: any[] = [];
+      logger.onToolCallUpdate((info: any) => updates.push(info));
 
-      logger.incrementToolCalls();
-      logger.incrementToolCalls();
+      logger.toolCallStarted("id1", "search", '{"q":"hello"}');
+      logger.toolCallCompleted("id1", "search");
 
-      expect(called).toBe(2);
+      expect(updates.length).toBe(2);
+      expect(updates[0].status).toBe("running");
+      expect(updates[0].name).toBe("search");
+      expect(updates[0].args).toBe('{"q":"hello"}');
+      expect(updates[1].status).toBe("completed");
+      expect(updates[1].callId).toBe("id1");
     });
 
     it("should allow unsubscribing from events", () => {
-      let called = 0;
-      const unsub = logger.onToolCall(() => called++);
+      const updates: any[] = [];
+      const unsub = logger.onToolCallUpdate((info: any) => updates.push(info));
 
-      logger.incrementToolCalls();
+      logger.toolCallStarted("id1", "test", "{}");
       unsub();
-      logger.incrementToolCalls();
+      logger.toolCallStarted("id2", "test2", "{}");
 
-      expect(called).toBe(1);
+      expect(updates.length).toBe(1);
     });
   });
 
