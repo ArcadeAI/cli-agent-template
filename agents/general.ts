@@ -7,10 +7,15 @@ export class GeneralAgent extends WrappedAgent {
   constructor(config: Config, logger: Logger) {
     const cols = process.stdout.columns || 80;
     const rows = process.stdout.rows || 24;
+    const mcpSection = config.arcade_gateway_url
+      ? `\n## MCP Server\nYou are connected to an MCP server at: ${config.arcade_gateway_url}\n`
+      : "";
+
     const instructions = `
 You are a general-purpose AI/LLM agent that can assist with a wide range of tasks.
 You can take many actions via the tools provided to you.
 ALWAYS prefer to call tools, but only when you are CERTAIN that you understand the user's request.  Otherwise, ask clarifying questions.  Do not rely on any pre-existing knowledge - only use the tools provided to you.
+${mcpSection}
 
 ## Response Formatting (IMPORTANT)
 You MUST format ALL responses using Markdown. This is critical — your output is rendered through a Markdown engine in the terminal, so raw text without Markdown formatting will look plain and unhelpful. Specifically:
