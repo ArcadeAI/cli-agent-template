@@ -9,10 +9,12 @@ interface InputBoxProps {
   contextDir: string;
   queueCount: number;
   focus: boolean;
+  isStreaming: boolean;
   onToggleFocus: () => void;
   onScroll: (direction: "left" | "right") => void;
   onScrollVertical: (direction: "up" | "down") => void;
   onReturnToInput: () => void;
+  onCancel: () => void;
 }
 
 const DELIM = "\0";
@@ -36,10 +38,12 @@ export function InputBox({
   contextDir,
   queueCount,
   focus,
+  isStreaming,
   onToggleFocus,
   onScroll,
   onScrollVertical,
   onReturnToInput,
+  onCancel,
 }: InputBoxProps) {
   const [value, setValue] = useState("");
   const historyFile = path.join(contextDir, "chat_history.txt");
@@ -63,6 +67,11 @@ export function InputBox({
   );
 
   useInput((input, key) => {
+    if (key.escape && isStreaming) {
+      onCancel();
+      return;
+    }
+
     if (key.tab) {
       onToggleFocus();
       return;
