@@ -8,6 +8,11 @@ interface InputBoxProps {
   onSubmit: (input: string) => void;
   contextDir: string;
   queueCount: number;
+  focus: boolean;
+  onToggleFocus: () => void;
+  onScroll: (direction: "left" | "right") => void;
+  onScrollVertical: (direction: "up" | "down") => void;
+  onReturnToInput: () => void;
 }
 
 const DELIM = "\0";
@@ -26,7 +31,16 @@ function saveToHistory(historyFile: string, entry: string) {
   fs.appendFileSync(historyFile, entry + DELIM);
 }
 
-export function InputBox({ onSubmit, contextDir, queueCount }: InputBoxProps) {
+export function InputBox({
+  onSubmit,
+  contextDir,
+  queueCount,
+  focus,
+  onToggleFocus,
+  onScroll,
+  onScrollVertical,
+  onReturnToInput,
+}: InputBoxProps) {
   const [value, setValue] = useState("");
   const historyFile = path.join(contextDir, "chat_history.txt");
   const historyRef = useRef<string[]>(loadHistory(historyFile));
@@ -48,7 +62,29 @@ export function InputBox({ onSubmit, contextDir, queueCount }: InputBoxProps) {
     [onSubmit, historyFile],
   );
 
-  useInput((_input, key) => {
+  useInput((input, key) => {
+    if (key.tab) {
+      onToggleFocus();
+      return;
+    }
+
+    if (!focus) {
+      // In scroll mode: arrows scroll, printable chars return to input
+      if (key.upArrow) {
+        onScrollVertical("up");
+      } else if (key.downArrow) {
+        onScrollVertical("down");
+      } else if (key.leftArrow) {
+        onScroll("left");
+      } else if (key.rightArrow) {
+        onScroll("right");
+      } else if (input && !key.ctrl && !key.meta) {
+        onReturnToInput();
+      }
+      return;
+    }
+
+    // In input mode: up/down for history
     const history = historyRef.current;
     if (key.upArrow && history.length > 0) {
       if (indexRef.current === -1) {
@@ -72,12 +108,16 @@ export function InputBox({ onSubmit, contextDir, queueCount }: InputBoxProps) {
 
   return (
     <Box flexDirection="column">
-      <Box borderStyle="round" borderColor="green" paddingX={1}>
+      <Box
+        borderStyle="round"
+        borderColor={focus ? "green" : "gray"}
+        paddingX={1}
+      >
         <TextInput
           value={value}
           onChange={setValue}
           onSubmit={handleSubmit}
-          focus={true}
+          focus={focus}
           showCursor={true}
           placeholder="Type your message..."
         />
