@@ -11,7 +11,6 @@ describe("Logger", () => {
     process.env.OPENAI_MODEL = "gpt-4-turbo";
     process.env.LOG_LEVEL = "info";
     process.env.ARCADE_API_KEY = "test-arcade-key";
-    process.env.USER_ID = "test-user-id";
   });
 
   afterEach(() => {

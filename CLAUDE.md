@@ -19,7 +19,7 @@ CLI agent template built with Bun + TypeScript. Provides an interactive chat int
 
 - `agent.ts` — CLI entry point (Commander.js). Single `chat` command with `-t, --toolkits` option
 - `classes/wrappedAgent.ts` — Abstract base agent with streaming, conversation history, interactive REPL
-- `classes/config.ts` — Loads required env vars: `OPENAI_API_KEY`, `OPENAI_MODEL`, `LOG_LEVEL`, `ARCADE_API_KEY`, `USER_ID`
+- `classes/config.ts` — Loads required env vars: `OPENAI_API_KEY`, `OPENAI_MODEL`, `LOG_LEVEL`
 - `classes/logger.ts` — Logging with levels, colors (chalk), spinners (ora), tool call tracking
 - `agents/general.ts` — Main agent implementation extending WrappedAgent
 - `utils/tools.ts` — Arcade.dev toolkit → OpenAI agent tool conversion
