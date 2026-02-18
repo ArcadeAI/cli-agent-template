@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "compile": "bun build agent.ts --compile --outfile agent --external react-devtools-core",
-    "clear": "rm -rf ${CONTEXT_DIR:-.context/arcade}"
+    "clear": "rm -rf ${CONTEXT_DIR:-.context/arcade}",
+    "start": "./agent.ts chat"
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
